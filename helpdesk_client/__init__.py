@@ -1,18 +1,14 @@
-from django.conf import settings
-from django.utils.module_loading import import_string
+from importlib import import_module
 
-from helpdesk_client.interfaces import HelpDeskBase, HelpDeskStubbed
+from helpdesk_client.interfaces import HelpDeskBase
 
 
-def get_helpdesk_interface() -> HelpDeskBase:
-    """
-    Get the People Finder interface from the PEOPLE_FINDER_INTERFACE setting
-    """
-    if not getattr(settings, "HELPDESK_INTERFACE", None):
-        return HelpDeskStubbed()
+def get_helpdesk_interface(class_path) -> HelpDeskBase:
+    parts = class_path.split(".")
+    module_string = ".".join(parts[:-1])
+    cls_string = parts[-1]
 
-    interface_class = import_string(settings.HELPDESK_INTERFACE)
-    if not issubclass(interface_class, HelpDeskBase):
-        raise ValueError("HELPDESK_INTERFACE must inherit from HelpDeskBase")
+    module = import_module(module_string)
+    cls = getattr(module, cls_string)
 
-    return interface_class()
+    return cls()
