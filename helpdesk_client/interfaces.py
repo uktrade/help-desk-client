@@ -2,6 +2,7 @@ import datetime
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import IntEnum
+import json
 from typing import Optional
 
 
@@ -13,29 +14,33 @@ class Priority(IntEnum):
 
 
 @dataclass
-class HelpDeskTicket:
-    requestor: str
-    topic: str
-    email: str
-    priority: Priority
+class HelpDeskTicket:  
+    topic: str 
     body: str
-    created_at: datetime.datetime
-    deleted_at: datetime.datetime
+    created_at: Optional[datetime.datetime] = None
     id: Optional[int] = None
+    user_id: Optional[int] = None
+    userdetail: Optional[dict] = None
+    priority: Optional[Priority] = None
+    recipient_email: Optional[str] = None
     responder: Optional[str] = None
     updated_at: Optional[datetime.datetime] = None
-    closed_at: Optional[datetime.datetime] = None
+    status: Optional[str] = None
     due_at: Optional[datetime.datetime] = None
     other: Optional[dict] = None
-
 
 class HelpDeskError(Exception):
     pass
 
 
 class HelpDeskBase(ABC):
+
     @abstractmethod
-    def create_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
+    def get_or_create_user(self, full_name: str, email_address: str) -> int:
+        raise NotImplementedError
+
+    @abstractmethod
+    def create_ticket(self, ticket: HelpDeskTicket, comment: Optional[str]) -> HelpDeskTicket:
         raise NotImplementedError
 
     @abstractmethod
@@ -51,7 +56,15 @@ class HelpDeskBase(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def add_comment(self, ticket: HelpDeskTicket, comment: str) -> HelpDeskTicket:
+        raise NotImplementedError 
+
+    @abstractmethod
     def update_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
+        raise NotImplementedError
+
+    @staticmethod
+    def oauth(subdomain:str, redirect_uri: str, credentials: dict, code: str) -> json:
         raise NotImplementedError
 
 
@@ -59,6 +72,12 @@ class HelpDeskStubbed(HelpDeskBase):
     def __init__(self) -> None:
         self._next_ticket_id = 1
         self._tickets: dict[int, HelpDeskTicket] = {}
+        self._next_user_id = 1
+
+    def get_or_create_user(self, full_name: str, email_address: str) -> int:
+        user_id = self._next_user_id
+        self._next_user_id += 1
+        return user_id
 
     def create_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
         self._tickets[self._next_ticket_id] = ticket
