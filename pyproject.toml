@@ -2,8 +2,11 @@
 name = "helpdesk-client"
 version = "0.1.2"
 description = "A python client for interfacing with the DIT helpdesk."
-authors = ["Sam Dudley <samuel.dudley@digital.trade.gov.uk>"]
-license = "MIT"
+authors = [
+    {email = "@digital.trade.gov.uk"},
+    {name = "Department for International Trade"}
+]
+license = {file = "LICENSE"}
 
 [tool.poetry.dependencies]
 python = "^3.8"

@@ -104,7 +104,7 @@ class TestZenDesk(unittest.TestCase):
     def test_zendesk_create_user_and_ticket(self):
         zendeskclient = ZenDeskClient(
             credentials= { 
-                'email':'test@example.com',
+                'email':'test@example.com', #test email /PS-IGNORE
                 'token':'token123',
                 'custom_field_id':123
                 },
@@ -113,7 +113,7 @@ class TestZenDesk(unittest.TestCase):
         zendeskclient.client = FakeApi()
 
         zendeskuserid = zendeskclient.get_or_create_user(
-                full_name='Jim Example', email_address='test@example.com'
+                full_name='Jim Example', email_address='test@example.com' #test email /PS-IGNORE
             )
         
         assert zendeskuserid == 1
@@ -131,11 +131,11 @@ class TestZenDesk(unittest.TestCase):
                 [{'id': 123, 'value': 'some-service-name'}],
                 'Field: value',
                 None,
-                'test@example.com',
+                'test@example.com', #test email /PS-IGNORE
             ]
         zendeskclient = ZenDeskClient(
             credentials= { 
-                'email':'test@example.com',
+                'email':'test@example.com', #test email /PS-IGNORE
                 'token':'token123'
                 },
             subdomain='subdomain123'
@@ -166,7 +166,7 @@ class TestZenDesk(unittest.TestCase):
             comment
         ) = [
                 'subject123',
-                'test@example.com',
+                'test@example.com', #test email /PS-IGNORE
                 'This is the message on slack message from slack.'
             ]
         zendeskclient = ZenDeskClient(
@@ -198,7 +198,7 @@ class TestZenDesk(unittest.TestCase):
     def test_zendesk_get_ticket(self,):
         zendeskclient = ZenDeskClient(
             credentials= { 
-                'email':'test@example.com',
+                'email':'test@example.com', #test email /PS-IGNORE
                 'token':'token123',
                 },
             subdomain='subdomain123'
@@ -221,7 +221,7 @@ class TestZenDesk(unittest.TestCase):
 
         zendeskclient = ZenDeskClient(
             credentials= { 
-                'email':'test@example.com',
+                'email':'test@example.com', #test email /PS-IGNORE
                 'token':'token123',
                 'custom_field_id':123
                 },
@@ -244,7 +244,7 @@ class TestZenDesk(unittest.TestCase):
             user_id
         ) = (
                 'subject123',
-                'test@example.com',
+                'test@example.com',  #test email /PS-IGNORE
                 'adding this comment',
                 1234
         )
@@ -283,7 +283,7 @@ class TestZenDesk(unittest.TestCase):
                 'subject123',
                 'Field: value',
                 None,
-                'test@example.com',
+                'test@example.com', #test email /PS-IGNORE
         )
 
         ticket = HelpDeskTicket(
@@ -297,7 +297,7 @@ class TestZenDesk(unittest.TestCase):
         )
         zendeskclient = ZenDeskClient(
             credentials= { 
-                'email':'test@example.com',
+                'email':'test@example.com', #test email /PS-IGNORE
                 'token':'token123',
                 },
             subdomain='subdomain123'
@@ -328,7 +328,7 @@ class TestZenDesk(unittest.TestCase):
                 'subject123',
                 'Field: value',
                 None,
-                'test@example.com',
+                'test@example.com', #test email /PS-IGNORE
         )
 
         ticket = HelpDeskTicket(
@@ -342,7 +342,7 @@ class TestZenDesk(unittest.TestCase):
         )
         zendeskclient = ZenDeskClient(
             credentials= { 
-                'email':'test@example.com',
+                'email':'test@example.com', #test email /PS-IGNORE
                 'token':'token123',
                 },
             subdomain='subdomain123'
@@ -364,7 +364,7 @@ class TestZenDesk(unittest.TestCase):
     def test_zendesk_close_ticket(self):
         zendeskclient = ZenDeskClient(
             credentials= { 
-                'email':'test@example.com',
+                'email':'test@example.com', #test email /PS-IGNORE
                 'token':'token123',
                 },
             subdomain='subdomain123'
@@ -388,7 +388,7 @@ class TestZenDesk(unittest.TestCase):
     def test_error_zendesk_close_ticket_not_found(self):
         zendeskclient = ZenDeskClient(
             credentials= { 
-                'email':'test@example.com',
+                'email':'test@example.com', #test email /PS-IGNORE
                 'token':'token123',
                 },
             subdomain='subdomain123'

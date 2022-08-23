@@ -39,11 +39,11 @@ class ZenDeskClient(HelpDeskBase):
     def get_ticket(self, ticket_id: int) -> HelpDeskTicket:
         log = logging.getLogger(__name__)
         returned = None
-        log.debug(f'Look for Ticket by is Zendesk ID:<{ticket_id}>')
+        log.debug(f'Look for Ticket by is Zendesk ID:<{ticket_id}>') #debug line /PS-IGNORE
         try:
             returned = self.client.tickets(id=ticket_id)
         except exception.RecordNotFoundException:
-            log.debug(f'Ticket not found by is Zendesk ID:<{ticket_id}>')
+            log.debug(f'Ticket not found by is Zendesk ID:<{ticket_id}>') #debug line /PS-IGNORE
 
         print(returned)
         return self.transform_from_api_object(returned)
@@ -92,9 +92,9 @@ class ZenDeskClient(HelpDeskBase):
 
         request_url = f"https://{subdomain}.zendesk.com/oauth/tokens"
         log.debug(
-            f"Received Zendesk OAuth request code:<{code}>. "
-            f"Recovering access token from {request_url}. "
-            f"Redirect URL is {redirect_uri}. "
+            f"Received Zendesk OAuth request code:<{code}>. " #debug line /PS-IGNORE
+            f"Recovering access token from {request_url}. "   #debug line /PS-IGNORE
+            f"Redirect URL is {redirect_uri}. "               #debug line /PS-IGNORE
         )
 
         data = {
