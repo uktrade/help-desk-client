@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 import datetime
+import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import IntEnum
-import json
 from typing import Optional
 
 
@@ -14,8 +15,8 @@ class Priority(IntEnum):
 
 
 @dataclass
-class HelpDeskTicket:  
-    topic: str 
+class HelpDeskTicket:
+    topic: str
     body: str
     created_at: Optional[datetime.datetime] = None
     id: Optional[int] = None
@@ -57,7 +58,7 @@ class HelpDeskBase(ABC):
 
     @abstractmethod
     def add_comment(self, ticket: HelpDeskTicket, comment: str) -> HelpDeskTicket:
-        raise NotImplementedError 
+        raise NotImplementedError
 
     @abstractmethod
     def update_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
