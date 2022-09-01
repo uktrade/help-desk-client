@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 import datetime
 import unittest
 from unittest import mock
 
 import pytest
-from helpdesk_client.interfaces import HelpDeskTicket
-from helpdesk_client.zendesk.zendesk_manager import ZenDeskManager
+from helpdesk_client.interfaces import HelpDeskTicket, HelpDeskComment, HelpDeskCustomField, HelpDeskUser
+from helpdesk_client.zendesk_manager import ZenDeskManager
 from zenpy.lib import exception
 from zenpy.lib.api_objects import Ticket
 from zenpy.lib.api_objects import User as ZendeskUser
@@ -15,7 +14,6 @@ class FakeUserResponse(object):
     def __init__(self, user_id):
         self.id = user_id
 
-
 class FakeTicket(object):
     def __init__(self, ticket_id):
         self.id = ticket_id
@@ -24,11 +22,9 @@ class FakeTicket(object):
         self.subject = 'fakesubject'
         self.requester_id = 1234
 
-
 class FakeTicketAudit(object):
     def __init__(self, ticket):
         self.ticket = ticket
-
 
 class FakeApi(object):
     """Aid testing tickets without using Zendesk API directly.
@@ -110,46 +106,31 @@ class TestZenDesk(unittest.TestCase):
                 },
         )
         zendeskmanager.client = FakeApi()
+        user = HelpDeskUser(full_name='Jim Example', email='test@example.com' ) #test email /PS-IGNORE
+        heldeskuser= zendeskmanager.get_or_create_user(user=user)
 
-        zendeskuserid = zendeskmanager.get_or_create_user(
-                full_name='Jim Example', email_address='test@example.com' #test email /PS-IGNORE
-            )
+        assert heldeskuser.id == 1
 
-        assert zendeskuserid == 1
     # create user & ticket fullname & email errors
-
     def test_zendesk_create_ticket(self):
-        (
-            subject,
-            custom_fields,
-            description,
-            tags,
-            email,
-        ) = [
-                'subject123',
-                [{'id': 123, 'value': 'some-service-name'}],
-                'Field: value',
-                None,
-                'test@example.com', #test email /PS-IGNORE
-            ]
         zendeskmanager = ZenDeskManager(
-            credentials= { 
+            credentials= {
                 'email':'test@example.com', #test email /PS-IGNORE
                 'token':'token123',
                 'subdomain':'subdomain123'
-                },
-            
+                }
         )
 
+        user = HelpDeskUser(id=1234)
+
         ticket = HelpDeskTicket(
-            recipient_email=email,
-            topic=subject,
-            body=description,
-            user_id=1234,
-            other={
-                'custom_fields':custom_fields,
-                'tags': tags
-                },
+            recipient_email='test@example.com', #test email /PS-IGNORE,
+            topic='subject123',
+            body='Field: value',
+            user=user,
+            custom_fields=[HelpDeskCustomField(
+                id= 123, value='some-service-name'
+            )]
         )
 
         zendeskmanager.client = FakeApi()
@@ -157,40 +138,39 @@ class TestZenDesk(unittest.TestCase):
         actualticket = zendeskmanager.create_ticket(ticket=ticket)
         assert actualticket.id == 1
         assert actualticket.topic == ticket.topic
-        assert actualticket.other.get('custom_fields') == custom_fields
+        assert actualticket.custom_fields == [HelpDeskCustomField(
+                id= 123, value='some-service-name'
+            )]
 
     def test_zendesk_create_ticket_from_slack(self):
-        (
-            subject,
-            email,
-            comment
-        ) = [
-                'subject123',
-                'test@example.com', #test email /PS-IGNORE
-                'This is the message on slack message from slack.'
-            ]
+        email =  'test@example.com' #test email /PS-IGNORE
+
         zendeskmanager = ZenDeskManager(
             client=FakeApi()
         )
 
-        ticket = HelpDeskTicket(
-            recipient_email=email,
-            topic=subject,
-            body=subject,
-            user_id=1234,
-            other={
-                    'external_id': 5678,
-                    'group_id':7890
-                },
+        user = HelpDeskUser(id=1234)
+
+        comment = HelpDeskComment(
+            body='This is the message on slack message from slack.',
         )
 
-        actualticket = zendeskmanager.create_ticket(ticket=ticket,comment=comment)
+        ticket = HelpDeskTicket(
+            recipient_email=email,
+            topic='subject123',
+            body='subject123',
+            user=user,
+            external_id= 5678,
+            group_id= 7890,
+            comment=comment
+        )
+
+        actualticket = zendeskmanager.create_ticket(ticket=ticket)
         assert actualticket.id == 1
         assert actualticket.topic == ticket.topic
-        assert actualticket.other['comment'][0] == comment
+        assert actualticket.comment.body == comment.body
 
     # def test_zendesk_create_ticket_with_custom_fields(self):
-    # create ticekt with (payload.get('_custom_fields') or []) best way?
 
     # def test_zendesk_create_ticket_with_all_fields(self):
 
@@ -202,10 +182,13 @@ class TestZenDesk(unittest.TestCase):
                 'subdomain': 'subdomain123'
                 },
         )
+
+        user = HelpDeskUser(id=1234)
+
         ticket = HelpDeskTicket(
             topic="facesubject",
             body="fakedescription",
-            user_id=1234,
+            user=user,
             id=12345
         )
 
@@ -235,77 +218,54 @@ class TestZenDesk(unittest.TestCase):
         assert actualticket is None
 
     def test_zendesk_add_comment(self):
-        (
-            subject,
-            email,
-            comment,
-            user_id
-        ) = (
-                'subject123',
-                'test@example.com',  #test email /PS-IGNORE
-                'adding this comment',
-                1234
+        email = 'test@example.com',  #test email /PS-IGNORE
+        user = HelpDeskUser(id=1234)
+
+        comment = HelpDeskComment(
+            body='adding this comment',
+            author_id=user.id
         )
 
         fake_ticket = FakeTicket(ticket_id=12345)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
         zendeskmanager = ZenDeskManager(
-            client=FakeApi(tickets=[fake_ticket], me=FakeUserResponse(user_id), ticket_audit=fake_ticket_audit)
+            client=FakeApi(tickets=[fake_ticket], me=FakeUserResponse(user.id), ticket_audit=fake_ticket_audit)
         )
 
         ticket = HelpDeskTicket(
             id=12345,
             recipient_email=email,
-            topic=subject,
-            body=subject,
-            user_id=user_id,
-            other={
-                    'external_id': 5678,
-                    'group_id':7890,
-                },
+            topic='subject123',
+            body='subject123',
+            user=user,
+            external_id= 5678,
+            group_id=7890
         )
 
-        actualticket = zendeskmanager.add_comment(ticket=ticket,comment=comment)
+        actualticket = zendeskmanager.add_comment(ticket_id=ticket.id,comment=comment)
 
         assert actualticket.id == ticket.id
         assert actualticket.topic == ticket.topic
-        assert actualticket.other['comment'][0] == comment
+        assert actualticket.comment.body == comment.body
 
     def test_zendesk_update_ticekt(self):
-        (
-            subject,
-            description,
-            tags,
-            email,
-        ) = (
-                'subject123',
-                'Field: value',
-                None,
-                'test@example.com', #test email /PS-IGNORE
-        )
+        email = 'test@example.com', #test email /PS-IGNORE
+
+        user = HelpDeskUser(id=1234)
 
         ticket = HelpDeskTicket(
             recipient_email=email,
-            topic=subject,
-            body=description,
-            user_id=1234,
-            other={
-                'tags': tags
-                },
+            topic='subject123',
+            body='Field: updated',
+            user=user,
+            id=12345
         )
         zendeskmanager = ZenDeskManager(
-            credentials= { 
+            credentials= {
                 'email':'test@example.com', #test email /PS-IGNORE
                 'token':'token123',
                 'subdomain':'subdomain123'
                 },
-            
-        )
-        ticket = HelpDeskTicket(
-            topic="fakesubject",
-            body="updated",
-            user_id=1234,
-            id=12345
         )
 
         fake_ticket = FakeTicket(ticket_id=12345)
@@ -315,43 +275,27 @@ class TestZenDesk(unittest.TestCase):
         updatedticket = zendeskmanager.update_ticket(ticket=ticket)
 
         assert updatedticket.id ==  ticket.id
-        assert updatedticket.body == 'updated'
+        assert updatedticket.body == 'Field: updated'
 
     def test_error_zendesk_update_ticekt_not_found(self):
-        (
-            subject,
-            description,
-            tags,
-            email,
-        ) = (
-                'subject123',
-                'Field: value',
-                None,
-                'test@example.com', #test email /PS-IGNORE
-        )
+
+        email = 'test@example.com' #test email /PS-IGNORE
+
+        user = HelpDeskUser(id=1234)
 
         ticket = HelpDeskTicket(
             recipient_email=email,
-            topic=subject,
-            body=description,
-            user_id=1234,
-            other={
-                'tags': tags
-                },
+            topic='subject123',
+            body='Field: updated',
+            user=user,
+            id=54321
         )
         zendeskmanager = ZenDeskManager(
-            credentials= { 
+            credentials= {
                 'email':'test@example.com', #test email /PS-IGNORE
                 'token':'token123',
                 'subdomain': 'subdomain123'
                 },
-            
-        )
-        ticket = HelpDeskTicket(
-            topic="fakesubject",
-            body="updated",
-            user_id=1234,
-            id=54321
         )
 
         fake_ticket = FakeTicket(ticket_id=12345)
@@ -363,16 +307,17 @@ class TestZenDesk(unittest.TestCase):
 
     def test_zendesk_close_ticket(self):
         zendeskmanager = ZenDeskManager(
-            credentials= { 
+            credentials= {
                 'email':'test@example.com', #test email /PS-IGNORE
                 'token':'token123',
                 'subdomain': 'subdomain123'
                 },
         )
+        user = HelpDeskUser(id=1234)
         ticket = HelpDeskTicket(
             topic="fakesubject",
             body="fakedescription",
-            user_id=1234,
+            user=user,
             id=12345
         )
 
@@ -401,7 +346,7 @@ class TestZenDesk(unittest.TestCase):
         actualticket = zendeskmanager.close_ticket(ticket_id=54321)
         assert actualticket is None
 
-    @mock.patch('helpdesk_client.zendesk.zendesk_manager.requests.post')
+    @mock.patch('helpdesk_client.zendesk_manager.requests.post')
     def test_zendesk_oauth_successful_token_exchange(self,requests_post):
 
         def loads():

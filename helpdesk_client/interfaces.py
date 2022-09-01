@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 import datetime
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import IntEnum
-from typing import Optional
+from enum import IntEnum,Enum
+from typing import Optional,List
 
 
 class Priority(IntEnum):
@@ -13,21 +12,49 @@ class Priority(IntEnum):
     NORMAL = 4
     LOW = 2
 
+class Type(Enum):
+    TICKET = 'ticket'
+    TASK = 'task'
+
+class Status(Enum):
+    CLOSED = 'closed'
+
+@dataclass
+class HelpDeskUser:
+    id: Optional[int] = None
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+
+@dataclass
+class HelpDeskComment:
+    body: str
+    public: bool = True
+    author_id: Optional[int] = None
+
+@dataclass
+class HelpDeskCustomField:
+    id: int
+    value: str
 
 @dataclass
 class HelpDeskTicket:
     topic: str
     body: str
-    created_at: Optional[datetime.datetime] = None
+    user: Optional[HelpDeskUser] = None
     id: Optional[int] = None
-    user_id: Optional[int] = None
-    userdetail: Optional[dict] = None
-    priority: Optional[Priority] = None
+    group_id: Optional[int] = None
+    external_id: Optional[int] = None
+    comment: Optional[HelpDeskComment] = None
+    tags: Optional[List[str]] = None
+    custom_fields: Optional[List[HelpDeskCustomField]] = None
     recipient_email: Optional[str] = None
     responder: Optional[str] = None
+    created_at: Optional[datetime.datetime] = None
     updated_at: Optional[datetime.datetime] = None
-    status: Optional[str] = None
     due_at: Optional[datetime.datetime] = None
+    status: Optional[str] = None
+    priority: Optional[Priority] = None
+    type: Optional[Type] = Type.TICKET
     other: Optional[dict] = None
 
 class HelpDeskError(Exception):
@@ -76,9 +103,9 @@ class HelpDeskStubbed(HelpDeskBase):
         self._next_user_id = 1
 
     def get_or_create_user(self, full_name: str, email_address: str) -> int:
-        user_id = self._next_user_id
+        id = self._next_user_id
         self._next_user_id += 1
-        return user_id
+        return id
 
     def create_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
         self._tickets[self._next_ticket_id] = ticket
