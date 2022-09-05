@@ -12,7 +12,7 @@ A python client for interfacing with the DIT helpdesk.
 
 ## Run tests
 
-1. `poetry run pytest tests -v`
+1. `make test`
 ## Publish a new version
 
 1. `make publish`

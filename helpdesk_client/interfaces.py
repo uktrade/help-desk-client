@@ -1,5 +1,4 @@
 import datetime
-import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, IntEnum
@@ -7,14 +6,16 @@ from typing import List, Optional
 
 
 class Priority(IntEnum):
-    URGENT = 10
-    HIGH = 8
-    NORMAL = 4
-    LOW = 2
+    URGENT = "urgent"
+    HIGH = "high"
+    NORMAL = "normal"
+    LOW = "low"
 
 
-class Type(Enum):
-    TICKET = "ticket"
+class TicketType(Enum):
+    QUESTION = "question"
+    INCIDENT = "incident"
+    PROBLEM = "problem"
     TASK = "task"
 
 
@@ -62,11 +63,15 @@ class HelpDeskTicket:
     due_at: Optional[datetime.datetime] = None
     status: Optional[str] = None
     priority: Optional[Priority] = None
-    type: Optional[Type] = Type.TICKET
+    ticket_type: Optional[TicketType] = None
     other: Optional[dict] = None
 
 
-class HelpDeskError(Exception):
+class HelpDeskException(Exception):
+    pass
+
+
+class HelpDeskTicketNotFoundException(Exception):
     pass
 
 
@@ -90,19 +95,11 @@ class HelpDeskBase(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_ticket(self, ticket_id: int) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
     def add_comment(self, ticket: HelpDeskTicket, comment: str) -> HelpDeskTicket:
         raise NotImplementedError
 
     @abstractmethod
     def update_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
-        raise NotImplementedError
-
-    @staticmethod
-    def oauth(subdomain: str, redirect_uri: str, credentials: dict, code: str) -> json:
         raise NotImplementedError
 
 
@@ -134,14 +131,9 @@ class HelpDeskStubbed(HelpDeskBase):
 
         return None
 
-    def delete_ticket(self, ticket_id: int) -> None:
-        del self._tickets[ticket_id]
-
-        return None
-
     def update_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
         if ticket.id is None:
-            raise HelpDeskError("Ticket has no ID")
+            raise HelpDeskException("Cannot update ticket, no ID found")
 
         ticket.updated_at = datetime.datetime.now()
 

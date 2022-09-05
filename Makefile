@@ -15,3 +15,6 @@ lint:
 	$(run) isort --check .
 	$(run) flake8 .
 	$(run) mypy .
+
+test:
+	$(run) poetry run pytest tests -v
