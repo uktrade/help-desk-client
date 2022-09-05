@@ -27,7 +27,7 @@ class ZendeskManager(HelpDeskBase):
     def __init__(self, **kwargs):
         """Create a new Zendesk client - pass credentials in
 
-        :param credentials: The credentials required to create client { token , email, subdomain }
+        :param credentials: The credentials required to create client { token , email, subdomain }.
         """
         if not kwargs.get("credentials", None):
             raise ZendeskClientNotFoundException("No Zendesk credentials provided")
@@ -43,10 +43,10 @@ class ZendeskManager(HelpDeskBase):
         """Get or Create a new Zendesk user   /PS-IGNORE
 
         :param HelpDeskUser
-                full_name: string full name for Zendesk user
-                email: string email address text for the Zendesk user
+                full_name: string full name for Zendesk user.
+                email: string email address text for the Zendesk user.
 
-        :returns: HelpDeskUser representing Zendesk user
+        :returns: HelpDeskUser instance representing Zendesk user.
         """
 
         transformed_user = self.__transform_helpdesk_user_to_zendesk_user(user)
@@ -67,9 +67,9 @@ class ZendeskManager(HelpDeskBase):
     def create_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
         """Create a new Zendesk ticket in response to a new user question.
 
-        :param ticket: HelpDeskTicket with information to create Zendesk ticket
+        :param ticket: HelpDeskTicket with information to create Zendesk ticket.
 
-        :returns: A HelpDeskTicket instance
+        :returns: A HelpDeskTicket instance.
         """
 
         zendesk_audit = self.client.tickets.create(
@@ -80,12 +80,12 @@ class ZendeskManager(HelpDeskBase):
     def get_ticket(self, ticket_id: int) -> HelpDeskTicket:
         """Recover the ticket by Zendesk ID
 
-        :param ticket_id: The Zendesk ID of the Ticket
+        :param ticket_id: The Zendesk ID of the Ticket.
 
-        :returns: A HelpDeskTicket instance
+        :returns: A HelpDeskTicket instance.
 
         :raises:
-            HelpDeskTicketNotFoundException: If no ticket is found
+            HelpDeskTicketNotFoundException: If no ticket is found.
         """
         logger.debug(f"Look for Ticket by is Zendesk ID:<{ticket_id}>")  # /PS-IGNORE
         try:
@@ -103,9 +103,9 @@ class ZendeskManager(HelpDeskBase):
     def close_ticket(self, ticket_id: int) -> HelpDeskTicket:
         """Close a ticket in Zendesk
 
-        :param ticket_id: The Zendesk ticket ID
+        :param ticket_id: The Zendesk ticket ID.
 
-        :returns: HelpDeskTicket instance
+        :returns: HelpDeskTicket instance.
         """
         logger.debug(f"Looking for ticket with ticket_id:<{ticket_id}>")
         ticket = self.get_ticket(ticket_id)
@@ -122,10 +122,10 @@ class ZendeskManager(HelpDeskBase):
     def add_comment(self, ticket_id: int, comment: HelpDeskComment) -> HelpDeskTicket:
         """Add a comment to an existing ticket
 
-        :param ticket_id: HelpDeskTicket instance id
-        :param comment: Comment text
+        :param ticket_id: id of Zendesk ticket instance.
+        :param comment: HelpDeskComment instance.
 
-        :returns: The updated HelpDeskTicket instance
+        :returns: The updated HelpDeskTicket instance.
         """
         ticket = self.get_ticket(ticket_id)
         ticket.comment = comment
@@ -137,6 +137,9 @@ class ZendeskManager(HelpDeskBase):
         :param ticket: HelpDeskTicket ticket.
 
         :returns: The updated HelpDeskTicket instance.
+
+        :raises:
+            HelpDeskTicketNotFoundException: If no ticket is found.
         """
         ticket_audit = self.client.tickets.update(
             self.__transform_helpdesk_to_zendesk_ticket(ticket)
@@ -182,14 +185,10 @@ class ZendeskManager(HelpDeskBase):
             description=ticket.body,
             submitter_id=ticket.user.id,
             assingee_id=ticket.assingee_id,
-            priority=ticket.priority,
-            requester=ZendeskUser(
-                id=getattr(ticket_user, "id", None),
-                name=getattr(ticket_user, "full_name", None),
-                email=getattr(ticket_user, "email", None),
-            ),
+            requester_id=ticket_user.id,
             group_id=ticket.group_id,
             external_id=ticket.external_id,  # /PS-IGNORE
+            priority=ticket.priority,
             tags=ticket.tags,
             custom_fields=custom_fields,
             comment=comment,
@@ -200,62 +199,53 @@ class ZendeskManager(HelpDeskBase):
     def __transform_zendesk_to_helpdesk_ticket(self, ticket: Ticket) -> HelpDeskTicket:
         """Transform Zendesk ticket into HelpDeskTicket instance
 
-        :param ticket: Zendesk ticket instance
+        :param ticket: Zendesk ticket instance.
 
         :returns: HelpDeskTicket instance.
         """
-        field_mapping = {
-            "id": lambda ticket: getattr(ticket, "id"),
-            "status": lambda ticket: getattr(ticket, "status", None),
-            "recipient_email": lambda ticket: getattr(ticket, "recipient", None),
-            "topic": lambda ticket: getattr(ticket, "subject"),
-            "body": lambda ticket: getattr(ticket, "description"),
-            "user": lambda ticket: HelpDeskUser(
+        ticket_user, custom_fields, comment = None, None, None
+
+        if getattr(ticket, "requester", None):
+            ticket_user = HelpDeskUser(
                 id=ticket.requester.id,
                 full_name=ticket.requester.name,
                 email=ticket.requester.email,
             )
-            if getattr(ticket, "requester", None)
-            else None,
-            "created_at": lambda ticket: getattr(ticket, "created_at", None),
-            "updated_at": lambda ticket: getattr(ticket, "updated_at", None),
-            "priority": lambda ticket: getattr(ticket, "priority", None),
-            "due_at": lambda ticket: getattr(ticket, "due_at", None),
-            "assingee_id": lambda ticket: getattr(ticket, "assingee_id", None),
-            "group_id": lambda ticket: getattr(ticket, "group_id", None),
-            "external_id": lambda ticket: getattr(  # /PS-IGNORE
-                ticket, "external_id", None  # /PS-IGNORE
-            ),
-            "tags": lambda ticket: getattr(ticket, "tags", None),
-            "custom_fields": lambda ticket: [
+        elif getattr(ticket, "requester_id", None):
+            ticket_user = HelpDeskUser(id=ticket.requester_id)
+
+        if getattr(ticket, "custom_fields", None):
+            custom_fields = [
                 HelpDeskCustomField(id=custom_field.id, value=custom_field.value)
-                for custom_field in getattr(ticket, "custom_fields")
+                for custom_field in ticket.custom_fields
             ]
-            if getattr(ticket, "custom_fields", None)
-            else None,
-            "comment": lambda ticket: HelpDeskComment(
+
+        if getattr(ticket, "comment", None):
+            comment = HelpDeskComment(
                 body=ticket.comment.body,
                 author_id=ticket.comment.author_id,
                 public=ticket.comment.public,
             )
-            if getattr(ticket, "comment", None)
-            else None,
-        }
 
-        if not ticket:
-            return None
-
-        return HelpDeskTicket(
-            **dict(
-                [
-                    (field, value)
-                    for field, transformation in field_mapping.items()
-                    if (value := transformation(ticket))
-                    if value
-                    is not None  # filters out fields which were not in the ticket
-                ]
-            )
+        helpdesk_ticket = HelpDeskTicket(
+            id=ticket.id,
+            status=getattr(ticket, "status", None),
+            recipient_email=getattr(ticket, "recipient", None),
+            topic=ticket.subject,
+            body=ticket.description,
+            user=ticket_user,
+            created_at=getattr(ticket, "created_at", None),
+            updated_at=getattr(ticket, "updated_at", None),
+            priority=getattr(ticket, "priority", None),
+            due_at=getattr(ticket, "due_at", None),
+            assingee_id=getattr(ticket, "assingee_id", None),
+            group_id=getattr(ticket, "group_id", None),
+            external_id=getattr(ticket, "external_id", None),  # /PS-IGNORE
+            tags=getattr(ticket, "tags", None),
+            custom_fields=custom_fields,
+            comment=comment,
         )
+        return helpdesk_ticket
 
     def __transform_helpdesk_user_to_zendesk_user(
         self, user: HelpDeskUser
@@ -285,6 +275,6 @@ class ZendeskManager(HelpDeskBase):
 
         :param user: HelpDeskUser user instance.
 
-        :returns: Zendesk user instance.
+        :returns: ZendeskUser instance.
         """
         return HelpDeskUser(id=user.id, full_name=user.name, email=user.email)

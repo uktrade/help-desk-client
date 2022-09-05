@@ -1,6 +1,5 @@
 import datetime
 import unittest
-from unittest import mock
 
 from zenpy.lib import exception
 from zenpy.lib.api_objects import Ticket
@@ -10,6 +9,7 @@ from helpdesk_client.interfaces import (
     HelpDeskComment,
     HelpDeskCustomField,
     HelpDeskTicket,
+    HelpDeskTicketNotFoundException,
     HelpDeskUser,
     Priority,
     Status,
@@ -231,38 +231,6 @@ class TestZenDesk(unittest.TestCase):
             HelpDeskCustomField(id=123, value="some-service-name")
         ]
 
-    def test_zendesk_create_ticket_from_slack(self):
-        email = "test@example.com"  # test email /PS-IGNORE
-
-        zendeskmanager = ZendeskManager()
-        fake_user = FakeUser(
-            id=1234,
-            name="Jim Example",
-            email="test@example.com",  # test email /PS-IGNORE
-        )
-        zendeskmanager.client = FakeApi(users=[fake_user])
-
-        user = HelpDeskUser(id=1234)
-
-        comment = HelpDeskComment(
-            body="This is the message on slack message from slack.",
-        )
-
-        ticket = HelpDeskTicket(
-            recipient_email=email,
-            topic="subject123",
-            body="subject123",
-            user=user,
-            external_id=5678,
-            group_id=7890,
-            comment=comment,
-        )
-
-        actualticket = zendeskmanager.create_ticket(ticket=ticket)
-        assert actualticket.id == 1
-        assert actualticket.topic == ticket.topic
-        assert actualticket.comment.body == comment.body
-
     def test_zendesk_create_ticket_with_all_details(self):
         zendeskmanager = ZendeskManager(
             credentials={
@@ -274,6 +242,10 @@ class TestZenDesk(unittest.TestCase):
 
         user = HelpDeskUser(id=1234)
 
+        comment = HelpDeskComment(
+            body="This is the initial ticket comment.",
+            public=False,
+        )
         ticket = HelpDeskTicket(
             recipient_email="test@example.com",  # test email /PS-IGNORE,
             topic="subject123",
@@ -283,9 +255,10 @@ class TestZenDesk(unittest.TestCase):
             external_id=789,
             group_id=456,
             assingee_id=3456,
+            comment=comment,
             priority=Priority.NORMAL,
             status=Status.OPEN,
-            type=TicketType.TASK,
+            ticket_type=TicketType.TASK,
             custom_fields=[HelpDeskCustomField(id=123, value="some-service-name")],
         )
 
@@ -297,7 +270,6 @@ class TestZenDesk(unittest.TestCase):
         zendeskmanager.client = FakeApi(users=[fake_user])
 
         actualticket = zendeskmanager.create_ticket(ticket=ticket)
-        print(actualticket)
         assert actualticket.id == 1
         assert actualticket.topic == ticket.topic
         assert actualticket.tags == ticket.tags
@@ -306,6 +278,9 @@ class TestZenDesk(unittest.TestCase):
         assert actualticket.assingee_id == ticket.assingee_id
         assert actualticket.priority == ticket.priority
         assert actualticket.status == ticket.status
+        assert actualticket.comment.author_id == 1234
+        assert actualticket.comment.body == ticket.comment.body
+        assert actualticket.comment.public == ticket.comment.public
         assert actualticket.custom_fields == [
             HelpDeskCustomField(id=123, value="some-service-name")
         ]
@@ -354,13 +329,19 @@ class TestZenDesk(unittest.TestCase):
             tickets=[fake_ticket], ticket_audit=fake_ticket_audit
         )
 
-        actualticket = zendeskmanager.get_ticket(ticket_id=54321)
-
-        assert actualticket is None
+        with self.assertRaises(HelpDeskTicketNotFoundException):
+            zendeskmanager.get_ticket(ticket_id=54321)
 
     def test_zendesk_add_comment(self):
-        user = HelpDeskUser(id=1234)
+        zendeskmanager = ZendeskManager(
+            credentials={
+                "email": "test@example.com",  # test email /PS-IGNORE
+                "token": "token123",
+                "subdomain": "subdomain123",
+            },
+        )
 
+        user = HelpDeskUser(id=1234)
         comment = HelpDeskComment(body="adding this comment", author_id=user.id)
 
         fake_user = FakeUser(
@@ -368,7 +349,6 @@ class TestZenDesk(unittest.TestCase):
         )
         fake_ticket = FakeTicket(ticket_id=12345, requester=fake_user)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
-        zendeskmanager = ZendeskManager()
         zendeskmanager.client = FakeApi(
             tickets=[fake_ticket],
             me=FakeUserResponse(user.id),
@@ -383,7 +363,13 @@ class TestZenDesk(unittest.TestCase):
         assert actualticket.comment.body == comment.body
 
     def test_zendesk_add_comment_no_author_id(self):
-
+        zendeskmanager = ZendeskManager(
+            credentials={
+                "email": "test@example.com",  # test email /PS-IGNORE
+                "token": "token123",
+                "subdomain": "subdomain123",
+            },
+        )
         comment = HelpDeskComment(body="adding this comment", public=False)
 
         fake_user = FakeUser(
@@ -391,7 +377,6 @@ class TestZenDesk(unittest.TestCase):
         )
         fake_ticket = FakeTicket(ticket_id=12345, requester=fake_user)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
-        zendeskmanager = ZendeskManager()
         zendeskmanager.client = FakeApi(
             tickets=[fake_ticket],
             me=FakeUserResponse(1234),
@@ -408,39 +393,6 @@ class TestZenDesk(unittest.TestCase):
         assert actualticket.comment.author_id == 1234
 
     def test_error_zendesk_add_comment_not_found(self):
-        user = HelpDeskUser(id=1234)
-
-        comment = HelpDeskComment(body="adding this comment", author_id=user.id)
-
-        fake_user = FakeUser(
-            id=1234, name="fakename", email="fake@email.com"  # test email /PS-IGNORE
-        )
-        fake_ticket = FakeTicket(ticket_id=98765, requester=fake_user)
-        fake_ticket_audit = FakeTicketAudit(fake_ticket)
-        zendeskmanager = ZendeskManager()
-        zendeskmanager.client = FakeApi(
-            tickets=[fake_ticket],
-            me=FakeUserResponse(user.id),
-            ticket_audit=fake_ticket_audit,
-            users=[fake_user],
-        )
-
-        actualticket = zendeskmanager.add_comment(ticket_id=12345, comment=comment)
-
-        assert actualticket is None
-
-    def test_zendesk_update_ticekt(self):
-        email = ("test@example.com",)  # test email /PS-IGNORE
-
-        user = HelpDeskUser(id=1234)
-
-        ticket = HelpDeskTicket(
-            recipient_email=email,
-            topic="subject123",
-            body="Field: updated",
-            user=user,
-            id=12345,
-        )
         zendeskmanager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
@@ -449,12 +401,49 @@ class TestZenDesk(unittest.TestCase):
             },
         )
 
+        user = HelpDeskUser(id=1234)
+        comment = HelpDeskComment(body="adding this comment", author_id=user.id)
+
+        fake_user = FakeUser(
+            id=1234, name="fakename", email="fake@email.com"  # test email /PS-IGNORE
+        )
+        fake_ticket = FakeTicket(ticket_id=98765, requester=fake_user)
+        fake_ticket_audit = FakeTicketAudit(fake_ticket)
+
+        zendeskmanager.client = FakeApi(
+            tickets=[fake_ticket],
+            me=FakeUserResponse(user.id),
+            ticket_audit=fake_ticket_audit,
+            users=[fake_user],
+        )
+
+        with self.assertRaises(HelpDeskTicketNotFoundException):
+            zendeskmanager.add_comment(ticket_id=12345, comment=comment)
+
+    def test_zendesk_update_ticekt(self):
+        zendeskmanager = ZendeskManager(
+            credentials={
+                "email": "test@example.com",  # test email /PS-IGNORE
+                "token": "token123",
+                "subdomain": "subdomain123",
+            },
+        )
+
+        user = HelpDeskUser(id=1234)
+
+        ticket = HelpDeskTicket(
+            recipient_email="test@example.com",  # test email /PS-IGNORE,
+            topic="subject123",
+            body="Field: updated",
+            user=user,
+            id=12345,
+        )
+
         fake_user = FakeUser(
             id=1234,
             name="Jim Example",
             email="test@example.com",  # test email /PS-IGNORE
         )
-        zendeskmanager.client = FakeApi(users=[fake_user])
         fake_ticket = FakeTicket(ticket_id=12345)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
         zendeskmanager.client = FakeApi(
@@ -498,8 +487,8 @@ class TestZenDesk(unittest.TestCase):
             tickets=[fake_ticket], ticket_audit=fake_ticket_audit, users=[fake_user]
         )
 
-        updatedticket = zendeskmanager.update_ticket(ticket=ticket)
-        assert updatedticket is None
+        with self.assertRaises(HelpDeskTicketNotFoundException):
+            zendeskmanager.update_ticket(ticket=ticket)
 
     def test_zendesk_close_ticket(self):
         zendeskmanager = ZendeskManager(
@@ -540,28 +529,5 @@ class TestZenDesk(unittest.TestCase):
             tickets=[fake_ticket], ticket_audit=fake_ticket_audit
         )
 
-        actualticket = zendeskmanager.close_ticket(ticket_id=54321)
-        assert actualticket is None
-
-    @mock.patch("helpdesk_client.zendesk_manager.requests.post")
-    def test_zendesk_oauth_successful_token_exchange(self, requests_post):
-        def loads():
-            return {
-                "access_token": "my-zd-access-token",
-                "token_type": "bearer",
-                "scope": "impersonate tickets:read tickets:write",
-            }
-
-        # mock the OK response from Zendesk
-        requests_post.return_value.json = loads
-
-        response = ZendeskManager.oauth(
-            subdomain="subdomain123",
-            redirect_uri="https://my.app/oauth",
-            credentials={"client_id": "testid", "client_secret": "testsecret"},
-            code=1234,
-        )
-
-        assert response["access_token"] == "my-zd-access-token"
-        assert response["token_type"] == "bearer"
-        assert response["scope"] == "impersonate tickets:read tickets:write"
+        with self.assertRaises(HelpDeskTicketNotFoundException):
+            zendeskmanager.close_ticket(ticket_id=54321)
