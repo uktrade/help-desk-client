@@ -2,8 +2,8 @@ import datetime
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import IntEnum,Enum
-from typing import Optional,List
+from enum import Enum, IntEnum
+from typing import List, Optional
 
 
 class Priority(IntEnum):
@@ -12,12 +12,16 @@ class Priority(IntEnum):
     NORMAL = 4
     LOW = 2
 
+
 class Type(Enum):
-    TICKET = 'ticket'
-    TASK = 'task'
+    TICKET = "ticket"
+    TASK = "task"
+
 
 class Status(Enum):
-    CLOSED = 'closed'
+    CLOSED = "closed"
+    OPEN = "open"
+
 
 @dataclass
 class HelpDeskUser:
@@ -25,16 +29,19 @@ class HelpDeskUser:
     full_name: Optional[str] = None
     email: Optional[str] = None
 
+
 @dataclass
 class HelpDeskComment:
     body: str
     public: bool = True
     author_id: Optional[int] = None
 
+
 @dataclass
 class HelpDeskCustomField:
     id: int
     value: str
+
 
 @dataclass
 class HelpDeskTicket:
@@ -44,6 +51,7 @@ class HelpDeskTicket:
     id: Optional[int] = None
     group_id: Optional[int] = None
     external_id: Optional[int] = None
+    assingee_id: Optional[int] = None
     comment: Optional[HelpDeskComment] = None
     tags: Optional[List[str]] = None
     custom_fields: Optional[List[HelpDeskCustomField]] = None
@@ -57,18 +65,20 @@ class HelpDeskTicket:
     type: Optional[Type] = Type.TICKET
     other: Optional[dict] = None
 
+
 class HelpDeskError(Exception):
     pass
 
 
 class HelpDeskBase(ABC):
-
     @abstractmethod
     def get_or_create_user(self, full_name: str, email_address: str) -> int:
         raise NotImplementedError
 
     @abstractmethod
-    def create_ticket(self, ticket: HelpDeskTicket, comment: Optional[str]) -> HelpDeskTicket:
+    def create_ticket(
+        self, ticket: HelpDeskTicket, comment: Optional[str]
+    ) -> HelpDeskTicket:
         raise NotImplementedError
 
     @abstractmethod
@@ -92,7 +102,7 @@ class HelpDeskBase(ABC):
         raise NotImplementedError
 
     @staticmethod
-    def oauth(subdomain:str, redirect_uri: str, credentials: dict, code: str) -> json:
+    def oauth(subdomain: str, redirect_uri: str, credentials: dict, code: str) -> json:
         raise NotImplementedError
 
 
