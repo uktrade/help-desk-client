@@ -42,3 +42,4 @@ Zendesk ID
 Transform Zendesk
 Transform HelpDesk
 Zendesk ID :
+sudo apt-get

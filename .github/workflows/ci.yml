@@ -13,6 +13,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install jq tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install gnome-keyring
+
       - name: Install poetry
         run: pip install poetry
 

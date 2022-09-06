@@ -50,7 +50,7 @@ class HelpDeskCustomField:
 class HelpDeskTicket:
     topic: str
     body: str
-    id: int = -1
+    id: int = 0
     user: Optional[HelpDeskUser] = None
     group_id: Optional[int] = None
     external_id: Optional[int] = None
