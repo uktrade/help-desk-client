@@ -347,7 +347,7 @@ six = ">=1.14.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "f5489e670a0efa487c493ef52694f8a93fbe29a55b2577ff0090566ae70c950a"
+content-hash = "b580e62adad2f085f6fb8445fd5f0582a280256bda01de61ed83280ad4f2dd65"
 
 [metadata.files]
 attrs = [

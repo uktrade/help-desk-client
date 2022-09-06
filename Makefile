@@ -17,4 +17,4 @@ lint:
 	$(run) mypy .
 
 test:
-	$(run) poetry run pytest tests -v
+	$(run) pytest tests -v

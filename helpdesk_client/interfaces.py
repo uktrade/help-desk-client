@@ -2,7 +2,7 @@ import datetime
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 
 class Priority(Enum):
@@ -50,8 +50,8 @@ class HelpDeskCustomField:
 class HelpDeskTicket:
     topic: str
     body: str
+    id: int = -1
     user: Optional[HelpDeskUser] = None
-    id: Optional[int] = None
     group_id: Optional[int] = None
     external_id: Optional[int] = None
     assingee_id: Optional[int] = None
@@ -66,7 +66,6 @@ class HelpDeskTicket:
     status: Optional[Status] = None
     priority: Optional[Priority] = None
     ticket_type: Optional[TicketType] = None
-    other: Optional[dict] = None
 
 
 class HelpDeskException(Exception):
@@ -79,13 +78,11 @@ class HelpDeskTicketNotFoundException(Exception):
 
 class HelpDeskBase(ABC):
     @abstractmethod
-    def get_or_create_user(self, full_name: str, email_address: str) -> int:
+    def get_or_create_user(self, user: HelpDeskUser) -> HelpDeskUser:
         raise NotImplementedError
 
     @abstractmethod
-    def create_ticket(
-        self, ticket: HelpDeskTicket, comment: Optional[str]
-    ) -> HelpDeskTicket:
+    def create_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
         raise NotImplementedError
 
     @abstractmethod
@@ -108,11 +105,11 @@ class HelpDeskBase(ABC):
 class HelpDeskStubbed(HelpDeskBase):
     def __init__(self) -> None:
         self._next_ticket_id = 1
-        self._tickets: dict[int, HelpDeskTicket] = {}
-        self._users: dict[int, HelpDeskUser] = {}
+        self._tickets: Dict[int, HelpDeskTicket] = {}
+        self._users: Dict[int, HelpDeskUser] = {}
         self._next_user_id = 1
 
-    def get_or_create_user(self, user: HelpDeskUser) -> int:
+    def get_or_create_user(self, user: HelpDeskUser) -> HelpDeskUser:
 
         if user.id:
             user_id = user.id
@@ -121,9 +118,9 @@ class HelpDeskStubbed(HelpDeskBase):
             self._next_user_id += 1
 
         if not self._users[user_id]:
-            self._users[user.id] = user
+            self._users[user_id] = user
 
-        return self._users[user.id]
+        return self._users[user_id]
 
     def create_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
         ticket.created_at = datetime.datetime.now()
@@ -152,7 +149,7 @@ class HelpDeskStubbed(HelpDeskBase):
 
         if self._tickets[ticket_id]:
             self._tickets[ticket_id].status = Status.CLOSED
-            self._tickets[ticket_id].closed_at = datetime.datetime.now()
+            self._tickets[ticket_id].updated_at = datetime.datetime.now()
             return self._tickets[ticket_id]
         else:
             raise HelpDeskTicketNotFoundException

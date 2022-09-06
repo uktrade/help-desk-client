@@ -8,6 +8,7 @@ from zenpy.lib.api_objects import User as ZendeskUser
 from helpdesk_client.interfaces import (
     HelpDeskComment,
     HelpDeskCustomField,
+    HelpDeskException,
     HelpDeskTicket,
     HelpDeskTicketNotFoundException,
     HelpDeskUser,
@@ -193,10 +194,9 @@ class TestZenDesk(unittest.TestCase):
             email="test@example.com",  # test email /PS-IGNORE
         )
         zendeskmanager.client = FakeApi(users=[fake_user])
-        user = HelpDeskUser()
-        helpdeskuser = zendeskmanager.get_or_create_user(user=user)
 
-        assert helpdeskuser is None
+        with self.assertRaises(HelpDeskException):
+            zendeskmanager.get_or_create_user(user=HelpDeskUser())
 
     def test_zendesk_create_ticket(self):
         zendeskmanager = ZendeskManager(
@@ -512,7 +512,7 @@ class TestZenDesk(unittest.TestCase):
         actualticket = zendeskmanager.close_ticket(ticket_id=12345)
 
         assert actualticket.id == 12345
-        assert actualticket.status == "closed"
+        assert actualticket.status == Status.CLOSED
 
     def test_error_zendesk_close_ticket_not_found(self):
         zendeskmanager = ZendeskManager(
