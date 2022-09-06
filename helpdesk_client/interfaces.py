@@ -1,39 +1,86 @@
 import datetime
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import IntEnum
-from typing import Optional
+from enum import Enum
+from typing import Dict, List, Optional
 
 
-class Priority(IntEnum):
-    URGENT = 10
-    HIGH = 8
-    NORMAL = 4
-    LOW = 2
+class Priority(Enum):
+    URGENT = "urgent"
+    HIGH = "high"
+    NORMAL = "normal"
+    LOW = "low"
+
+
+class TicketType(Enum):
+    QUESTION = "question"
+    INCIDENT = "incident"
+    PROBLEM = "problem"
+    TASK = "task"
+
+
+class Status(Enum):
+    CLOSED = "closed"
+    NEW = "new"
+    PENDING = "pending"
+    OPEN = "open"
+
+
+@dataclass
+class HelpDeskUser:
+    id: Optional[int] = None
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+
+
+@dataclass
+class HelpDeskComment:
+    body: str
+    public: bool = True
+    author_id: Optional[int] = None
+
+
+@dataclass
+class HelpDeskCustomField:
+    id: int
+    value: str
 
 
 @dataclass
 class HelpDeskTicket:
-    requestor: str
     topic: str
-    email: str
-    priority: Priority
     body: str
-    created_at: datetime.datetime
-    deleted_at: datetime.datetime
-    id: Optional[int] = None
+    id: int = 0
+    user: Optional[HelpDeskUser] = None
+    group_id: Optional[int] = None
+    external_id: Optional[int] = None
+    assingee_id: Optional[int] = None
+    comment: Optional[HelpDeskComment] = None
+    tags: Optional[List[str]] = None
+    custom_fields: Optional[List[HelpDeskCustomField]] = None
+    recipient_email: Optional[str] = None
     responder: Optional[str] = None
+    created_at: Optional[datetime.datetime] = None
     updated_at: Optional[datetime.datetime] = None
-    closed_at: Optional[datetime.datetime] = None
     due_at: Optional[datetime.datetime] = None
-    other: Optional[dict] = None
+    status: Optional[Status] = None
+    priority: Optional[Priority] = None
+    ticket_type: Optional[TicketType] = None
 
 
-class HelpDeskError(Exception):
+class HelpDeskException(Exception):
+    pass
+
+
+class HelpDeskTicketNotFoundException(Exception):
     pass
 
 
 class HelpDeskBase(ABC):
+    @abstractmethod
+    def get_or_create_user(self, user: HelpDeskUser) -> HelpDeskUser:
+        raise NotImplementedError
+
     @abstractmethod
     def create_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
         raise NotImplementedError
@@ -43,11 +90,11 @@ class HelpDeskBase(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def close_ticket(self, ticket_id: int) -> None:
+    def close_ticket(self, ticket_id: int) -> HelpDeskTicket:
         raise NotImplementedError
 
     @abstractmethod
-    def delete_ticket(self, ticket_id: int) -> None:
+    def add_comment(self, ticket_id: int, comment: HelpDeskComment) -> HelpDeskTicket:
         raise NotImplementedError
 
     @abstractmethod
@@ -58,9 +105,25 @@ class HelpDeskBase(ABC):
 class HelpDeskStubbed(HelpDeskBase):
     def __init__(self) -> None:
         self._next_ticket_id = 1
-        self._tickets: dict[int, HelpDeskTicket] = {}
+        self._tickets: Dict[int, HelpDeskTicket] = {}
+        self._users: Dict[int, HelpDeskUser] = {}
+        self._next_user_id = 1
+
+    def get_or_create_user(self, user: HelpDeskUser) -> HelpDeskUser:
+
+        if user.id:
+            user_id = user.id
+        else:
+            user_id = self._next_user_id
+            self._next_user_id += 1
+
+        if not self._users[user_id]:
+            self._users[user_id] = user
+
+        return self._users[user_id]
 
     def create_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
+        ticket.created_at = datetime.datetime.now()
         self._tickets[self._next_ticket_id] = ticket
         ticket.id = self._next_ticket_id
 
@@ -69,25 +132,33 @@ class HelpDeskStubbed(HelpDeskBase):
         return ticket
 
     def get_ticket(self, ticket_id: int) -> HelpDeskTicket:
-        return self._tickets[ticket_id]
+        if self._tickets[ticket_id]:
+            return self._tickets[ticket_id]
+        else:
+            raise HelpDeskTicketNotFoundException
 
-    def close_ticket(self, ticket_id: int) -> None:
-        ticket = self._tickets[ticket_id]
-        ticket.closed_at = datetime.datetime.now()
+    def add_comment(self, ticket_id: int, comment: HelpDeskComment) -> HelpDeskTicket:
+        if self._tickets[ticket_id]:
+            self._tickets[ticket_id].comment = comment
+            self._tickets[ticket_id].updated_at = datetime.datetime.now()
+            return self._tickets[ticket_id]
+        else:
+            raise HelpDeskTicketNotFoundException
 
-        return None
+    def close_ticket(self, ticket_id: int) -> HelpDeskTicket:
 
-    def delete_ticket(self, ticket_id: int) -> None:
-        del self._tickets[ticket_id]
-
-        return None
+        if self._tickets[ticket_id]:
+            self._tickets[ticket_id].status = Status.CLOSED
+            self._tickets[ticket_id].updated_at = datetime.datetime.now()
+            return self._tickets[ticket_id]
+        else:
+            raise HelpDeskTicketNotFoundException
 
     def update_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
-        if ticket.id is None:
-            raise HelpDeskError("Ticket has no ID")
 
-        ticket.updated_at = datetime.datetime.now()
-
-        self._tickets[ticket.id] = ticket
-
-        return ticket
+        if self._tickets[ticket.id]:
+            self._tickets[ticket.id] = ticket
+            self._tickets[ticket.id].updated_at = datetime.datetime.now()
+            return self._tickets[ticket.id]
+        else:
+            raise HelpDeskTicketNotFoundException

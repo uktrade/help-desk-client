@@ -1,0 +1,45 @@
+DLL
+var/
+PyInstaller
+# Installer
+pip-delete-this-directory.txt
+local_settings.py
+ner_output_file.txt
+Scrapy
+Sphinx
+PyBuilder
+Jupyter Notebook
+#   
+PEP 582
+Celery
+env/
+ENV/
+# Rope
+dmypy.json
+Pyre
+CI
+DIT
+Department for International Trade
+MIT
+^7.1.2
+Zendesk API
+external_id
+Zendesk
+author_id
+f"https://{subdomain}.zendesk.com
+updated_at
+0.0.0.34
+Zenpy
+Zendesk Subdomain
+The Zendesk Ticket ID
+the Zendesk Support API
+param
+zendesk user
+HelpDeskUser
+Jim Example
+Email 
+Zendesk ID
+Transform Zendesk
+Transform HelpDesk
+Zendesk ID :
+sudo apt-get

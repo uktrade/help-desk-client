@@ -10,6 +10,11 @@ A python client for interfacing with the DIT helpdesk.
 
 1. `poetry install`
 
+## Run tests
+
+1. `make test`
 ## Publish a new version
 
 1. `make publish`
+
+## Usage
