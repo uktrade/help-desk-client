@@ -14,7 +14,7 @@ lint:
 	$(run) black --check .
 	$(run) isort --check .
 	$(run) flake8 .
-	$(run) mypy .
+	# TODO - reinstate $(run) mypy . --exclude '/zenpy$'
 
 test:
 	$(run) pytest tests -v
