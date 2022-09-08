@@ -15,4 +15,4 @@ def get_helpdesk_interface(class_path) -> HelpDeskBase:
     module = import_module(module_string)
     cls = getattr(module, cls_string)
 
-    return cls()
+    return cls

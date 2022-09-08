@@ -48,9 +48,9 @@ class HelpDeskCustomField:
 
 @dataclass
 class HelpDeskTicket:
-    topic: str
-    body: str
     id: int = 0
+    topic: str
+    description: Optional[str] = None
     user: Optional[HelpDeskUser] = None
     group_id: Optional[int] = None
     external_id: Optional[int] = None
