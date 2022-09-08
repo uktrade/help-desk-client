@@ -1,6 +1,6 @@
 # helpdesk-client
 
-A python client for interfacing with the DIT helpdesk.
+A Python client for interfacing with helpdesk services.
 
 ## Requirements
 
