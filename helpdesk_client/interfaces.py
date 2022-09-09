@@ -48,8 +48,8 @@ class HelpDeskCustomField:
 
 @dataclass
 class HelpDeskTicket:
+    subject: str
     id: int = 0
-    topic: str
     description: Optional[str] = None
     user: Optional[HelpDeskUser] = None
     group_id: Optional[int] = None

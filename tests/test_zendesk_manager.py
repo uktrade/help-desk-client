@@ -211,8 +211,8 @@ class TestZenDesk(unittest.TestCase):
 
         ticket = HelpDeskTicket(
             recipient_email="test@example.com",  # test email /PS-IGNORE,
-            topic="subject123",
-            body="Field: value",
+            subject="subject123",
+            description="Field: value",
             user=user,
             custom_fields=[HelpDeskCustomField(id=123, value="some-service-name")],
         )
@@ -226,7 +226,7 @@ class TestZenDesk(unittest.TestCase):
 
         actualticket = zendeskmanager.create_ticket(ticket=ticket)
         assert actualticket.id == 1
-        assert actualticket.topic == ticket.topic
+        assert actualticket.subject == ticket.subject
         assert actualticket.custom_fields == [
             HelpDeskCustomField(id=123, value="some-service-name")
         ]
@@ -248,8 +248,8 @@ class TestZenDesk(unittest.TestCase):
         )
         ticket = HelpDeskTicket(
             recipient_email="test@example.com",  # test email /PS-IGNORE,
-            topic="subject123",
-            body="Field: value",
+            subject="subject123",
+            description="Field: value",
             user=user,
             tags=["tag1", "tag2"],
             external_id=789,
@@ -271,7 +271,7 @@ class TestZenDesk(unittest.TestCase):
 
         actualticket = zendeskmanager.create_ticket(ticket=ticket)
         assert actualticket.id == 1
-        assert actualticket.topic == ticket.topic
+        assert actualticket.subject == ticket.subject
         assert actualticket.tags == ticket.tags
         assert actualticket.external_id == ticket.external_id
         assert actualticket.group_id == ticket.group_id
@@ -299,7 +299,7 @@ class TestZenDesk(unittest.TestCase):
         user = HelpDeskUser(id=1234)
 
         ticket = HelpDeskTicket(
-            topic="facesubject", body="fakedescription", user=user, id=12345
+            subject="facesubject", description="fakedescription", user=user, id=12345
         )
 
         fake_ticket = FakeTicket(ticket_id=12345)
@@ -359,7 +359,7 @@ class TestZenDesk(unittest.TestCase):
         actualticket = zendeskmanager.add_comment(ticket_id=12345, comment=comment)
 
         assert actualticket.id == 12345
-        assert actualticket.topic == "fakesubject"
+        assert actualticket.subject == "fakesubject"
         assert actualticket.comment.body == comment.body
 
     def test_zendesk_add_comment_no_author_id(self):
@@ -387,7 +387,7 @@ class TestZenDesk(unittest.TestCase):
         actualticket = zendeskmanager.add_comment(ticket_id=12345, comment=comment)
 
         assert actualticket.id == 12345
-        assert actualticket.topic == "fakesubject"
+        assert actualticket.subject == "fakesubject"
         assert actualticket.comment.body == comment.body
         assert actualticket.comment.public == comment.public
         assert actualticket.comment.author_id == 1234
@@ -433,8 +433,8 @@ class TestZenDesk(unittest.TestCase):
 
         ticket = HelpDeskTicket(
             recipient_email="test@example.com",  # test email /PS-IGNORE,
-            topic="subject123",
-            body="Field: updated",
+            subject="subject123",
+            description="Field: updated",
             user=user,
             id=12345,
         )
@@ -453,7 +453,7 @@ class TestZenDesk(unittest.TestCase):
         updatedticket = zendeskmanager.update_ticket(ticket=ticket)
 
         assert updatedticket.id == ticket.id
-        assert updatedticket.body == "Field: updated"
+        assert updatedticket.description == "Field: updated"
 
     def test_error_zendesk_update_ticekt_not_found(self):
 
@@ -463,8 +463,8 @@ class TestZenDesk(unittest.TestCase):
 
         ticket = HelpDeskTicket(
             recipient_email=email,
-            topic="subject123",
-            body="Field: updated",
+            subject="subject123",
+            description="Field: updated",
             user=user,
             id=54321,
         )
