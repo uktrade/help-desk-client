@@ -103,7 +103,7 @@ class HelpDeskBase(ABC):
 
 
 class HelpDeskStubbed(HelpDeskBase):
-    def __init__(self) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         self._next_ticket_id = 1
         self._tickets: Dict[int, HelpDeskTicket] = {}
         self._users: Dict[int, HelpDeskUser] = {}
