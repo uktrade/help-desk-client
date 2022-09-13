@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "helpdesk-client"
-version = "0.1.5"
+version = "0.1.6"
 readme = "README.md"
 description = "A Python client for interfacing with helpdesk services."
 authors = ["Sam Dudley <sam.dudley@digital.trade.gov.uk>", "Ross Miller <ross.miller@digital.trade.gov.uk>", "Luisella Strona <luisella.strona@trade.gov.uk>", "Anthoni Gleeson <anthoni.gleeson@trade.gov.uk>", "Ares Galamatis <ares.galamatis@trade.gov.uk>"]
