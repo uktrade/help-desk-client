@@ -13,8 +13,15 @@ A Python client for interfacing with helpdesk services.
 ## Run tests
 
 1. `make test`
-## Publish a new version
 
-1. `make publish`
+## Create a PyPI release (and create tag)
 
-## Usage
+* Merge PR into main (making sure you have bumped the version in the .toml)
+
+* Pull the main branch to your machine
+
+* `git tag [new version #]`
+
+* `git push origin --tags`
+
+* `make publish`
