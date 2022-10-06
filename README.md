@@ -1,6 +1,6 @@
-# helpdesk-client
+# help-desk-client
 
-A Python client for interfacing with helpdesk services.
+A Python client for interfacing with help desk services.
 
 ## Requirements
 

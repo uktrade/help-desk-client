@@ -1,12 +1,12 @@
 from importlib import import_module
 
-from helpdesk_client.interfaces import HelpDeskBase
+from help_desk_client.interfaces import HelpDeskBase
 
 
-def get_helpdesk_interface(class_path) -> HelpDeskBase:
-    """Give access to an instantiated helpdesk class
+def get_help_desk_interface(class_path) -> HelpDeskBase:
+    """Give access to an instantiated help desk class
 
-    :param class_path: The Python import path to the helpdesk class
+    :param class_path: The Python import path to the help desk class
     """
     parts = class_path.split(".")
     module_string = ".".join(parts[:-1])

@@ -5,7 +5,7 @@ from zenpy.lib import exception
 from zenpy.lib.api_objects import Ticket
 from zenpy.lib.api_objects import User as ZendeskUser
 
-from helpdesk_client.interfaces import (
+from help_desk_client.interfaces import (
     HelpDeskComment,
     HelpDeskCustomField,
     HelpDeskException,
@@ -16,7 +16,7 @@ from helpdesk_client.interfaces import (
     Status,
     TicketType,
 )
-from helpdesk_client.zendesk_manager import ZendeskManager
+from help_desk_client.zendesk_manager import ZendeskManager
 
 
 class FakeUser(object):
@@ -126,23 +126,23 @@ class FakeApi(object):
 
 class TestZenDesk(unittest.TestCase):
     def test_zendesk_create_user(self):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
                 "subdomain": "subdomain123",
             },
         )
-        zendeskmanager.client = FakeApi()
+        zendesk_manager.client = FakeApi()
         user = HelpDeskUser(
             full_name="Jim Example", email="test@example.com"  # test email /PS-IGNORE
         )
-        heldeskuser = zendeskmanager.get_or_create_user(user=user)
+        heldeskuser = zendesk_manager.get_or_create_user(user=user)
 
         assert heldeskuser.id == 1
 
     def test_zendesk_get_user(self):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -154,16 +154,16 @@ class TestZenDesk(unittest.TestCase):
             name="Jim Example",
             email="test@example.com",  # test email /PS-IGNORE
         )
-        zendeskmanager.client = FakeApi(users=[fake_user])
+        zendesk_manager.client = FakeApi(users=[fake_user])
         user = HelpDeskUser(id=1234)
-        helpdeskuser = zendeskmanager.get_or_create_user(user=user)
+        help_desk_user = zendesk_manager.get_or_create_user(user=user)
 
-        assert helpdeskuser.id == 1234
-        assert helpdeskuser.full_name == "Jim Example"
-        assert helpdeskuser.email == "test@example.com"  # test email /PS-IGNORE
+        assert help_desk_user.id == 1234
+        assert help_desk_user.full_name == "Jim Example"
+        assert help_desk_user.email == "test@example.com"  # test email /PS-IGNORE
 
     def test_zendesk_get_cached_user(self):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -175,13 +175,13 @@ class TestZenDesk(unittest.TestCase):
             name="Jim Example",
             email="test@example.com",  # test email /PS-IGNORE
         )
-        zendeskmanager.client = FakeApi(users=[fake_user], me=FakeUserResponse(1234))
-        helpdeskuser = zendeskmanager.get_or_create_user()
+        zendesk_manager.client = FakeApi(users=[fake_user], me=FakeUserResponse(1234))
+        help_desk_user = zendesk_manager.get_or_create_user()
 
-        assert helpdeskuser.id == 1234
+        assert help_desk_user.id == 1234
 
     def test_error_zendesk_cannot_get_or_create_user(self):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -193,13 +193,13 @@ class TestZenDesk(unittest.TestCase):
             name="Jim Example",
             email="test@example.com",  # test email /PS-IGNORE
         )
-        zendeskmanager.client = FakeApi(users=[fake_user])
+        zendesk_manager.client = FakeApi(users=[fake_user])
 
         with self.assertRaises(HelpDeskException):
-            zendeskmanager.get_or_create_user(user=HelpDeskUser())
+            zendesk_manager.get_or_create_user(user=HelpDeskUser())
 
     def test_zendesk_create_ticket(self):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -222,9 +222,9 @@ class TestZenDesk(unittest.TestCase):
             name="Jim Example",
             email="test@example.com",  # test email /PS-IGNORE
         )
-        zendeskmanager.client = FakeApi(users=[fake_user])
+        zendesk_manager.client = FakeApi(users=[fake_user])
 
-        actualticket = zendeskmanager.create_ticket(ticket=ticket)
+        actualticket = zendesk_manager.create_ticket(ticket=ticket)
         assert actualticket.id == 1
         assert actualticket.subject == ticket.subject
         assert actualticket.custom_fields == [
@@ -232,7 +232,7 @@ class TestZenDesk(unittest.TestCase):
         ]
 
     def test_zendesk_create_ticket_with_all_details(self):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -267,9 +267,9 @@ class TestZenDesk(unittest.TestCase):
             name="Jim Example",
             email="test@example.com",  # test email /PS-IGNORE
         )
-        zendeskmanager.client = FakeApi(users=[fake_user])
+        zendesk_manager.client = FakeApi(users=[fake_user])
 
-        actualticket = zendeskmanager.create_ticket(ticket=ticket)
+        actualticket = zendesk_manager.create_ticket(ticket=ticket)
         assert actualticket.id == 1
         assert actualticket.subject == ticket.subject
         assert actualticket.tags == ticket.tags
@@ -288,7 +288,7 @@ class TestZenDesk(unittest.TestCase):
     def test_zendesk_get_ticket(
         self,
     ):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -304,18 +304,18 @@ class TestZenDesk(unittest.TestCase):
 
         fake_ticket = FakeTicket(ticket_id=12345)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
-        zendeskmanager.client = FakeApi(
+        zendesk_manager.client = FakeApi(
             tickets=[fake_ticket], ticket_audit=fake_ticket_audit
         )
 
-        actualticket = zendeskmanager.get_ticket(ticket_id=12345)
+        actualticket = zendesk_manager.get_ticket(ticket_id=12345)
         assert actualticket.id == ticket.id
 
     def test_error_zendesk_does_not_get_ticket(
         self,
     ):
 
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -325,15 +325,15 @@ class TestZenDesk(unittest.TestCase):
 
         fake_ticket = FakeTicket(ticket_id=12345)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
-        zendeskmanager.client = FakeApi(
+        zendesk_manager.client = FakeApi(
             tickets=[fake_ticket], ticket_audit=fake_ticket_audit
         )
 
         with self.assertRaises(HelpDeskTicketNotFoundException):
-            zendeskmanager.get_ticket(ticket_id=54321)
+            zendesk_manager.get_ticket(ticket_id=54321)
 
     def test_zendesk_add_comment(self):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -349,21 +349,21 @@ class TestZenDesk(unittest.TestCase):
         )
         fake_ticket = FakeTicket(ticket_id=12345, requester=fake_user)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
-        zendeskmanager.client = FakeApi(
+        zendesk_manager.client = FakeApi(
             tickets=[fake_ticket],
             me=FakeUserResponse(user.id),
             ticket_audit=fake_ticket_audit,
             users=[fake_user],
         )
 
-        actualticket = zendeskmanager.add_comment(ticket_id=12345, comment=comment)
+        actualticket = zendesk_manager.add_comment(ticket_id=12345, comment=comment)
 
         assert actualticket.id == 12345
         assert actualticket.subject == "fakesubject"
         assert actualticket.comment.body == comment.body
 
     def test_zendesk_add_comment_no_author_id(self):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -377,14 +377,14 @@ class TestZenDesk(unittest.TestCase):
         )
         fake_ticket = FakeTicket(ticket_id=12345, requester=fake_user)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
-        zendeskmanager.client = FakeApi(
+        zendesk_manager.client = FakeApi(
             tickets=[fake_ticket],
             me=FakeUserResponse(1234),
             ticket_audit=fake_ticket_audit,
             users=[fake_user],
         )
 
-        actualticket = zendeskmanager.add_comment(ticket_id=12345, comment=comment)
+        actualticket = zendesk_manager.add_comment(ticket_id=12345, comment=comment)
 
         assert actualticket.id == 12345
         assert actualticket.subject == "fakesubject"
@@ -393,7 +393,7 @@ class TestZenDesk(unittest.TestCase):
         assert actualticket.comment.author_id == 1234
 
     def test_error_zendesk_add_comment_not_found(self):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -410,7 +410,7 @@ class TestZenDesk(unittest.TestCase):
         fake_ticket = FakeTicket(ticket_id=98765, requester=fake_user)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
 
-        zendeskmanager.client = FakeApi(
+        zendesk_manager.client = FakeApi(
             tickets=[fake_ticket],
             me=FakeUserResponse(user.id),
             ticket_audit=fake_ticket_audit,
@@ -418,10 +418,10 @@ class TestZenDesk(unittest.TestCase):
         )
 
         with self.assertRaises(HelpDeskTicketNotFoundException):
-            zendeskmanager.add_comment(ticket_id=12345, comment=comment)
+            zendesk_manager.add_comment(ticket_id=12345, comment=comment)
 
     def test_zendesk_update_ticekt(self):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -446,11 +446,11 @@ class TestZenDesk(unittest.TestCase):
         )
         fake_ticket = FakeTicket(ticket_id=12345)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
-        zendeskmanager.client = FakeApi(
+        zendesk_manager.client = FakeApi(
             tickets=[fake_ticket], ticket_audit=fake_ticket_audit, users=[fake_user]
         )
 
-        updatedticket = zendeskmanager.update_ticket(ticket=ticket)
+        updatedticket = zendesk_manager.update_ticket(ticket=ticket)
 
         assert updatedticket.id == ticket.id
         assert updatedticket.description == "Field: updated"
@@ -468,7 +468,7 @@ class TestZenDesk(unittest.TestCase):
             user=user,
             id=54321,
         )
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -483,15 +483,15 @@ class TestZenDesk(unittest.TestCase):
         )
         fake_ticket = FakeTicket(ticket_id=12345)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
-        zendeskmanager.client = FakeApi(
+        zendesk_manager.client = FakeApi(
             tickets=[fake_ticket], ticket_audit=fake_ticket_audit, users=[fake_user]
         )
 
         with self.assertRaises(HelpDeskTicketNotFoundException):
-            zendeskmanager.update_ticket(ticket=ticket)
+            zendesk_manager.update_ticket(ticket=ticket)
 
     def test_zendesk_close_ticket(self):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -505,17 +505,17 @@ class TestZenDesk(unittest.TestCase):
         fake_ticket = FakeTicket(ticket_id=12345, requester=fake_user)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
 
-        zendeskmanager.client = FakeApi(
+        zendesk_manager.client = FakeApi(
             tickets=[fake_ticket], ticket_audit=fake_ticket_audit, users=[fake_user]
         )
 
-        actualticket = zendeskmanager.close_ticket(ticket_id=12345)
+        actualticket = zendesk_manager.close_ticket(ticket_id=12345)
 
         assert actualticket.id == 12345
         assert actualticket.status == Status.CLOSED
 
     def test_error_zendesk_close_ticket_not_found(self):
-        zendeskmanager = ZendeskManager(
+        zendesk_manager = ZendeskManager(
             credentials={
                 "email": "test@example.com",  # test email /PS-IGNORE
                 "token": "token123",
@@ -525,9 +525,9 @@ class TestZenDesk(unittest.TestCase):
 
         fake_ticket = FakeTicket(ticket_id=12345)
         fake_ticket_audit = FakeTicketAudit(fake_ticket)
-        zendeskmanager.client = FakeApi(
+        zendesk_manager.client = FakeApi(
             tickets=[fake_ticket], ticket_audit=fake_ticket_audit
         )
 
         with self.assertRaises(HelpDeskTicketNotFoundException):
-            zendeskmanager.close_ticket(ticket_id=54321)
+            zendesk_manager.close_ticket(ticket_id=54321)

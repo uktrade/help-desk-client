@@ -1,4 +1,4 @@
-name: helpdesk-client CI
+name: help-desk-client CI
 
 on:
   push:
