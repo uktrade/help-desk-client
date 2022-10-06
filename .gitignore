@@ -134,3 +134,5 @@ dmypy.json
 # Pre-commit hooks
 .pii-secret-hook/
 
+# OS
+.DS_Store

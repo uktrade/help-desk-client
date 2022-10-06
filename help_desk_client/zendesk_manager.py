@@ -218,7 +218,7 @@ class ZendeskManager(HelpDeskBase):
 
         if getattr(ticket, "custom_fields", None):
             custom_fields = [
-                HelpDeskCustomField(id=custom_field.id, value=custom_field.value)
+                HelpDeskCustomField(id=custom_field["id"], value=custom_field["value"])
                 for custom_field in ticket.custom_fields
             ]
 
