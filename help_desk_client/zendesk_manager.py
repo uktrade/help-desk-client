@@ -2,7 +2,11 @@ import logging
 
 from zenpy import Zenpy
 from zenpy.lib import exception
-from zenpy.lib.api_objects import Comment, CustomField, Ticket
+from zenpy.lib.api_objects import (
+    Comment,
+    CustomField,
+    Ticket as ZendeskTicket,
+)
 from zenpy.lib.api_objects import User as ZendeskUser
 
 from help_desk_client.interfaces import (
@@ -10,6 +14,7 @@ from help_desk_client.interfaces import (
     HelpDeskComment,
     HelpDeskCustomField,
     HelpDeskException,
+    HelpDeskGroup,
     HelpDeskTicket,
     HelpDeskTicketNotFoundException,
     HelpDeskUser,
@@ -154,7 +159,7 @@ class ZendeskManager(HelpDeskBase):
 
         return self.__transform_zendesk_to_help_desk_ticket(ticket_audit.ticket)
 
-    def __transform_help_desk_to_zendesk_ticket(self, ticket: HelpDeskTicket) -> Ticket:
+    def __transform_help_desk_to_zendesk_ticket(self, ticket: HelpDeskTicket) -> ZendeskTicket:
         """Transform from HelpDeskTicket to Zendesk ticket instance.
 
         :param ticket: HelpDeskTicket instance.
@@ -179,7 +184,7 @@ class ZendeskManager(HelpDeskBase):
                 public=ticket.comment.public,
             )
 
-        ticket = Ticket(
+        ticket = ZendeskTicket(
             id=ticket.id,
             status=ticket.status,
             recipient=ticket.recipient_email,
@@ -198,7 +203,7 @@ class ZendeskManager(HelpDeskBase):
 
         return ticket
 
-    def __transform_zendesk_to_help_desk_ticket(self, ticket: Ticket) -> HelpDeskTicket:
+    def __transform_zendesk_to_help_desk_ticket(self, ticket: ZendeskTicket) -> HelpDeskTicket:
         """Transform Zendesk ticket into HelpDeskTicket instance.
 
         :param ticket: Zendesk ticket instance.
@@ -277,4 +282,23 @@ class ZendeskManager(HelpDeskBase):
 
         :returns: ZendeskUser instance.
         """
-        return HelpDeskUser(id=user.id, full_name=user.name, email=user.email)
+
+        # Create groups
+        groups = []
+
+        for zendesk_group in list(self.client.users.groups(user)):
+            groups.append(
+                HelpDeskGroup(
+                    created_at = zendesk_group.created_at,
+                    default = zendesk_group.default,
+                    deleted = zendesk_group.deleted,
+                    description = zendesk_group.description,
+                    id = zendesk_group.id,
+                    is_public = zendesk_group.is_public,
+                    name = zendesk_group.name,
+                    updated_at = zendesk_group.updated_at,
+                    url = zendesk_group.url,
+                )
+            )
+
+        return HelpDeskUser(id=user.id, full_name=user.name, email=user.email, groups=groups)
