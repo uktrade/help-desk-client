@@ -2,7 +2,11 @@ import logging
 
 from zenpy import Zenpy
 from zenpy.lib import exception
-from zenpy.lib.api_objects import Comment, CustomField, Ticket
+from zenpy.lib.api_objects import (
+    Comment as ZendeskComment,
+    CustomField as ZendeskCustomField,
+    Ticket as ZendeskTicket,
+)
 from zenpy.lib.api_objects import User as ZendeskUser
 
 from help_desk_client.interfaces import (
@@ -10,6 +14,7 @@ from help_desk_client.interfaces import (
     HelpDeskComment,
     HelpDeskCustomField,
     HelpDeskException,
+    HelpDeskGroup,
     HelpDeskTicket,
     HelpDeskTicketNotFoundException,
     HelpDeskUser,
@@ -25,6 +30,8 @@ class ZendeskClientNotFoundException(Exception):
 
 
 class ZendeskManager(HelpDeskBase):
+    client = None
+
     def __init__(self, **kwargs):
         """Create a new Zendesk client - pass credentials to.
 
@@ -154,7 +161,7 @@ class ZendeskManager(HelpDeskBase):
 
         return self.__transform_zendesk_to_help_desk_ticket(ticket_audit.ticket)
 
-    def __transform_help_desk_to_zendesk_ticket(self, ticket: HelpDeskTicket) -> Ticket:
+    def __transform_help_desk_to_zendesk_ticket(self, ticket: HelpDeskTicket) -> ZendeskTicket:
         """Transform from HelpDeskTicket to Zendesk ticket instance.
 
         :param ticket: HelpDeskTicket instance.
@@ -166,12 +173,12 @@ class ZendeskManager(HelpDeskBase):
 
         if ticket.custom_fields:
             custom_fields = [
-                CustomField(id=custom_field.id, value=custom_field.value)
+                ZendeskCustomField(id=custom_field.id, value=custom_field.value)
                 for custom_field in ticket.custom_fields
             ]
 
         if ticket.comment:
-            comment = Comment(
+            comment = ZendeskComment(
                 body=ticket.comment.body,
                 author_id=ticket.comment.author_id
                 if ticket.comment.author_id
@@ -179,14 +186,14 @@ class ZendeskManager(HelpDeskBase):
                 public=ticket.comment.public,
             )
 
-        ticket = Ticket(
+        ticket = ZendeskTicket(
             id=ticket.id,
             status=ticket.status,
             recipient=ticket.recipient_email,
             subject=ticket.subject,
             description=ticket.description,
             submitter_id=ticket_user.id,
-            assingee_id=ticket.assingee_id,
+            assignee_id=ticket.assignee_id,
             requester_id=ticket_user.id,
             group_id=ticket.group_id,
             external_id=ticket.external_id,  # /PS-IGNORE
@@ -198,7 +205,7 @@ class ZendeskManager(HelpDeskBase):
 
         return ticket
 
-    def __transform_zendesk_to_help_desk_ticket(self, ticket: Ticket) -> HelpDeskTicket:
+    def __transform_zendesk_to_help_desk_ticket(self, ticket: ZendeskTicket) -> HelpDeskTicket:
         """Transform Zendesk ticket into HelpDeskTicket instance.
 
         :param ticket: Zendesk ticket instance.
@@ -240,7 +247,7 @@ class ZendeskManager(HelpDeskBase):
             updated_at=getattr(ticket, "updated_at", None),
             priority=getattr(ticket, "priority", None),
             due_at=getattr(ticket, "due_at", None),
-            assingee_id=getattr(ticket, "assingee_id", None),
+            assignee_id=getattr(ticket, "assignee_id", None),
             group_id=getattr(ticket, "group_id", None),
             external_id=getattr(ticket, "external_id", None),  # /PS-IGNORE
             tags=getattr(ticket, "tags", None),
@@ -277,4 +284,16 @@ class ZendeskManager(HelpDeskBase):
 
         :returns: ZendeskUser instance.
         """
-        return HelpDeskUser(id=user.id, full_name=user.name, email=user.email)
+        groups = [
+            HelpDeskGroup(
+                created_at = zendesk_group.created_at,
+                deleted = zendesk_group.deleted,
+                id = zendesk_group.id,
+                name = zendesk_group.name,
+                updated_at = zendesk_group.updated_at,
+                url = zendesk_group.url,
+            )
+            for zendesk_group in list(self.client.users.groups(user))
+        ]
+
+        return HelpDeskUser(id=user.id, full_name=user.name, email=user.email, groups=groups)
