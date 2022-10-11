@@ -191,7 +191,7 @@ class ZendeskManager(HelpDeskBase):
             subject=ticket.subject,
             description=ticket.description,
             submitter_id=ticket_user.id,
-            assingee_id=ticket.assingee_id,
+            assignee_id=ticket.assignee_id,
             requester_id=ticket_user.id,
             group_id=ticket.group_id,
             external_id=ticket.external_id,  # /PS-IGNORE
@@ -245,7 +245,7 @@ class ZendeskManager(HelpDeskBase):
             updated_at=getattr(ticket, "updated_at", None),
             priority=getattr(ticket, "priority", None),
             due_at=getattr(ticket, "due_at", None),
-            assingee_id=getattr(ticket, "assingee_id", None),
+            assignee_id=getattr(ticket, "assignee_id", None),
             group_id=getattr(ticket, "group_id", None),
             external_id=getattr(ticket, "external_id", None),  # /PS-IGNORE
             tags=getattr(ticket, "tags", None),

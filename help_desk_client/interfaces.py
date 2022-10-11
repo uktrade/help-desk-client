@@ -27,17 +27,31 @@ class Status(Enum):
 
 
 @dataclass
+class HelpDeskGroup:
+    name: str
+    created_at: Optional[datetime.datetime] = None
+    default: Optional[bool] = None
+    deleted: Optional[bool] = None
+    description: Optional[str] = None
+    id: Optional[int] = None
+    is_public: Optional[bool] = None
+    updated_at: Optional[datetime.datetime] = None
+    url: Optional[str] = None
+
+
+@dataclass
 class HelpDeskUser:
-    id: Optional[int]
-    full_name: Optional[str]
-    email: Optional[str]
+    id: Optional[int] = None
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    groups: Optional[List[HelpDeskGroup]] = None
 
 
 @dataclass
 class HelpDeskComment:
     body: str
+    author_id: Optional[int] = None
     public: bool = True
-    author_id: Optional[int]
 
 
 @dataclass
@@ -47,38 +61,25 @@ class HelpDeskCustomField:
 
 
 @dataclass
-class HelpDeskGroup:
-    created_at: Optional[datetime.datetime]
-    default: Optional[bool]
-    deleted: Optional[bool]
-    description: Optional[str]
-    id: Optional[int]
-    is_public: Optional[bool]
-    name: str
-    updated_at: Optional[datetime.datetime]
-    url: Optional[str]
-
-
-@dataclass
 class HelpDeskTicket:
     subject: str
-    id: int
-    description: Optional[str]
-    user: Optional[HelpDeskUser]
-    group_id: Optional[int]
-    external_id: Optional[int]
-    assignee_id: Optional[int]
-    comment: Optional[HelpDeskComment]
-    tags: Optional[List[str]]
-    custom_fields: Optional[List[HelpDeskCustomField]]
-    recipient_email: Optional[str]
-    responder: Optional[str]
-    created_at: Optional[datetime.datetime]
-    updated_at: Optional[datetime.datetime]
-    due_at: Optional[datetime.datetime]
-    status: Optional[Status]
-    priority: Optional[Priority]
-    ticket_type: Optional[TicketType]
+    id: Optional[int] = None
+    description: Optional[str] = None
+    user: Optional[HelpDeskUser] = None
+    group_id: Optional[int] = None
+    external_id: Optional[int] = None
+    assignee_id: Optional[int] = None
+    comment: Optional[HelpDeskComment] = None
+    tags: Optional[List[str]] = None
+    custom_fields: Optional[List[HelpDeskCustomField]] = None
+    recipient_email: Optional[str] = None
+    responder: Optional[str] = None
+    created_at: Optional[datetime.datetime] = None
+    updated_at: Optional[datetime.datetime] = None
+    due_at: Optional[datetime.datetime] = None
+    status: Optional[Status] = None
+    priority: Optional[Priority] = None
+    ticket_type: Optional[TicketType] = None
 
 
 class HelpDeskException(Exception):
