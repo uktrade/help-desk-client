@@ -1,9 +1,9 @@
 import datetime
 import unittest
-
+from unittest.mock import patch, MagicMock
 from zenpy.lib import exception
 from zenpy.lib.api_objects import Ticket as ZendeskTicket
-from zenpy.lib.api_objects import User as ZendeskUser
+from zenpy.lib.api_objects import Group as ZendeskGroup, User as ZendeskUser
 
 from help_desk_client.interfaces import (
     HelpDeskComment,
@@ -66,6 +66,14 @@ class FakeApi(object):
 
         def me(self):
             return self._me
+
+        def groups(self, user):
+            return [
+                ZendeskGroup(
+                    id=1,
+                    name="test group",
+                )
+            ]
 
         def __call__(self, id: int) -> ZendeskUser:
             """Recover a specific user."""
@@ -254,7 +262,7 @@ class TestZenDesk(unittest.TestCase):
             tags=["tag1", "tag2"],
             external_id=789,
             group_id=456,
-            assingee_id=3456,
+            assignee_id=3456,
             comment=comment,
             priority=Priority.NORMAL,
             status=Status.OPEN,
@@ -532,42 +540,25 @@ class TestZenDesk(unittest.TestCase):
         with self.assertRaises(HelpDeskTicketNotFoundException):
             zendesk_manager.close_ticket(ticket_id=54321)
 
-    def test_group_assignment(self):
+    @patch('help_desk_client.zendesk_manager.ZendeskManager.__init__')
+    @patch('help_desk_client.zendesk_manager.ZendeskManager.client')
+    def test_group_assignment(self, mock_client, mock_init):
+        mock_init.return_value = None
+        mock_client.users.groups.return_value = [
+            ZendeskGroup(
+                id=1,
+                name="test group",
+            )
+        ]
 
-        email = "test@example.com"  # test email /PS-IGNORE
-
-        user = HelpDeskUser(
-            id=1234,
-            groups=[
-                
-            ]
+        zendesk_user = ZendeskUser(
+            id=1,
         )
 
-        ticket = HelpDeskTicket(
-            recipient_email=email,
-            subject="subject123",
-            description="Field: updated",
-            user=user,
-            id=54321,
-        )
-        zendesk_manager = ZendeskManager(
-            credentials={
-                "email": "test@example.com",  # test email /PS-IGNORE
-                "token": "token123",
-                "subdomain": "subdomain123",
-            },
+        zendesk_manager = ZendeskManager()
+
+        help_desk_user = zendesk_manager._ZendeskManager__transform_zendesk_user_to_help_desk_user(
+            zendesk_user,
         )
 
-        fake_user = FakeUser(
-            id=1234,
-            name="Jim Example",
-            email="test@example.com",  # test email /PS-IGNORE
-        )
-        fake_ticket = FakeTicket(ticket_id=12345)
-        fake_ticket_audit = FakeTicketAudit(fake_ticket)
-        zendesk_manager.client = FakeApi(
-            tickets=[fake_ticket], ticket_audit=fake_ticket_audit, users=[fake_user]
-        )
-
-        with self.assertRaises(HelpDeskTicketNotFoundException):
-            zendesk_manager.update_ticket(ticket=ticket)
+        assert help_desk_user.groups[0].name == "test group"

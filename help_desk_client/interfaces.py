@@ -30,11 +30,8 @@ class Status(Enum):
 class HelpDeskGroup:
     name: str
     created_at: Optional[datetime.datetime] = None
-    default: Optional[bool] = None
     deleted: Optional[bool] = None
-    description: Optional[str] = None
     id: Optional[int] = None
-    is_public: Optional[bool] = None
     updated_at: Optional[datetime.datetime] = None
     url: Optional[str] = None
 

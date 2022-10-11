@@ -3,8 +3,8 @@ import logging
 from zenpy import Zenpy
 from zenpy.lib import exception
 from zenpy.lib.api_objects import (
-    Comment,
-    CustomField,
+    Comment as ZendeskComment,
+    CustomField as ZendeskCustomField,
     Ticket as ZendeskTicket,
 )
 from zenpy.lib.api_objects import User as ZendeskUser
@@ -30,6 +30,8 @@ class ZendeskClientNotFoundException(Exception):
 
 
 class ZendeskManager(HelpDeskBase):
+    client = None
+
     def __init__(self, **kwargs):
         """Create a new Zendesk client - pass credentials to.
 
@@ -171,12 +173,12 @@ class ZendeskManager(HelpDeskBase):
 
         if ticket.custom_fields:
             custom_fields = [
-                CustomField(id=custom_field.id, value=custom_field.value)
+                ZendeskCustomField(id=custom_field.id, value=custom_field.value)
                 for custom_field in ticket.custom_fields
             ]
 
         if ticket.comment:
-            comment = Comment(
+            comment = ZendeskComment(
                 body=ticket.comment.body,
                 author_id=ticket.comment.author_id
                 if ticket.comment.author_id
@@ -282,23 +284,16 @@ class ZendeskManager(HelpDeskBase):
 
         :returns: ZendeskUser instance.
         """
-
-        # Create groups
-        groups = []
-
-        for zendesk_group in list(self.client.users.groups(user)):
-            groups.append(
-                HelpDeskGroup(
-                    created_at = zendesk_group.created_at,
-                    default = zendesk_group.default,
-                    deleted = zendesk_group.deleted,
-                    description = zendesk_group.description,
-                    id = zendesk_group.id,
-                    is_public = zendesk_group.is_public,
-                    name = zendesk_group.name,
-                    updated_at = zendesk_group.updated_at,
-                    url = zendesk_group.url,
-                )
+        groups = [
+            HelpDeskGroup(
+                created_at = zendesk_group.created_at,
+                deleted = zendesk_group.deleted,
+                id = zendesk_group.id,
+                name = zendesk_group.name,
+                updated_at = zendesk_group.updated_at,
+                url = zendesk_group.url,
             )
+            for zendesk_group in list(self.client.users.groups(user))
+        ]
 
         return HelpDeskUser(id=user.id, full_name=user.name, email=user.email, groups=groups)
