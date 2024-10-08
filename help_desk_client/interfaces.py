@@ -27,17 +27,28 @@ class Status(Enum):
 
 
 @dataclass
+class HelpDeskGroup:
+    name: str
+    created_at: Optional[datetime.datetime] = None
+    deleted: Optional[bool] = None
+    id: Optional[int] = None
+    updated_at: Optional[datetime.datetime] = None
+    url: Optional[str] = None
+
+
+@dataclass
 class HelpDeskUser:
     id: Optional[int] = None
     full_name: Optional[str] = None
     email: Optional[str] = None
+    groups: Optional[List[HelpDeskGroup]] = None
 
 
 @dataclass
 class HelpDeskComment:
     body: str
-    public: bool = True
     author_id: Optional[int] = None
+    public: bool = True
 
 
 @dataclass
@@ -49,12 +60,12 @@ class HelpDeskCustomField:
 @dataclass
 class HelpDeskTicket:
     subject: str
-    id: int = 0
+    id: Optional[int] = None
     description: Optional[str] = None
     user: Optional[HelpDeskUser] = None
     group_id: Optional[int] = None
     external_id: Optional[int] = None
-    assingee_id: Optional[int] = None
+    assignee_id: Optional[int] = None
     comment: Optional[HelpDeskComment] = None
     tags: Optional[List[str]] = None
     custom_fields: Optional[List[HelpDeskCustomField]] = None
@@ -104,7 +115,8 @@ class HelpDeskBase(ABC):
 
 class HelpDeskStubbed(HelpDeskBase):
     def __init__(self, *args, **kwargs) -> None:
-        self._next_ticket_id = 1
+        self.id = 1
+        self._next_ticket_id = 2
         self._tickets: Dict[int, HelpDeskTicket] = {}
         self._users: Dict[int, HelpDeskUser] = {}
         self._next_user_id = 1
